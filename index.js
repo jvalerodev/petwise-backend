@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import db from './config/database.js';
-import { userRoutes } from './routes/index.js';
+import { userRoutes, authRoutes } from './routes/index.js';
 
 dotenv.config();
 
@@ -27,6 +27,7 @@ db.authenticate()
   .catch((error) => console.log(error));
 
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port: ${PORT}.`);
