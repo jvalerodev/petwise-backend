@@ -61,3 +61,20 @@ export const logout = async (req, res) => {
   res.clearCookie('api-token');
   return res.status(204).json({});
 };
+
+export const getUser = async (req, res) => {
+  const { user } = req;
+
+  try {
+    const vet = await Vet.findByPk(user.id, {
+      attributes: ['id', 'name', 'lastName', 'email']
+    });
+
+    const { id, name, lastName, email } = vet?.dataValues;
+
+    return res.status(200).json({ id, name, lastName, email });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};
