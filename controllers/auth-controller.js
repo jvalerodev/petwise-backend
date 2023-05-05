@@ -1,7 +1,7 @@
+import { QueryTypes } from 'sequelize';
 import { validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import Vet from '../models/Vet.js';
+import db from '../config/database.js';
 import { validatePassword } from '../helpers/passwords.js';
 
 export const login = async (req, res) => {
@@ -15,7 +15,11 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ where: { email } });
+    const [user] = await db.query('SELECT * FROM users WHERE email = $email', {
+      bind: { email },
+      type: QueryTypes.SELECT
+    });
+
     const passwordDb = user?.password || '';
 
     const isValidPassword = await validatePassword(password, passwordDb);
@@ -24,10 +28,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const vet = await Vet.findOne({
-      where: { userId: user.id },
-      attributes: ['id', 'name', 'lastName', 'email']
-    });
+    const [vet] = await db.query(
+      'SELECT id, name, last_name AS "lastName", email FROM vets WHERE user_id = $userId',
+      { bind: { userId: user.id }, type: QueryTypes.SELECT }
+    );
 
     const userForToken = {
       id: Number(vet.id),
@@ -66,11 +70,12 @@ export const getUser = async (req, res) => {
   const { user } = req;
 
   try {
-    const vet = await Vet.findByPk(user.id, {
-      attributes: ['id', 'name', 'lastName', 'email']
-    });
+    const [vet] = await db.query(
+      'SELECT id, name, last_name AS "lastName", email FROM vets WHERE id = $id',
+      { bind: { id: user.id }, type: QueryTypes.SELECT }
+    );
 
-    const { id, name, lastName, email } = vet?.dataValues;
+    const { id, name, lastName, email } = vet;
 
     return res.status(200).json({ id, name, lastName, email });
   } catch (error) {
