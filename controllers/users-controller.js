@@ -20,7 +20,7 @@ export const register = async (req, res) => {
     );
 
     if (userExists) {
-      return res.status(400).json({ error: 'This user already exists.' });
+      return res.status(400).json({ error: 'Este usuario ya existe' });
     }
 
     const hashedPassword = await hashPassword(password);
@@ -47,7 +47,7 @@ export const register = async (req, res) => {
       }
     );
 
-    return res.status(201).json({ msg: 'User registered successfully.' });
+    return res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: 'Something went wrong.' });

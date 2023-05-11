@@ -25,7 +25,9 @@ export const login = async (req, res) => {
     const isValidPassword = await validatePassword(password, passwordDb);
 
     if (!user || !isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return res
+        .status(401)
+        .json({ error: 'Correo electrónico o contraseña inválida' });
     }
 
     const [vet] = await db.query(
