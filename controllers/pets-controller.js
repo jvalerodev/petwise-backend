@@ -41,7 +41,7 @@ export const createPet = async (req, res) => {
 
     // Get owner if already exists
     let [owner] = await db.query(
-      'SELECT id, name, last_name AS "lastName" FROM owners WHERE dni = $ownerDni;',
+      'SELECT id, name, last_name FROM owners WHERE dni = $ownerDni;',
       {
         bind: { ownerDni },
         type: QueryTypes.SELECT
@@ -75,17 +75,55 @@ export const createPet = async (req, res) => {
       }
     );
 
-    return res.status(200).json({
-      id: Number(pet.id),
+    const petRes = {
+      id: pet.id,
       name: pet.name,
       species: pet.species,
+      gender: pet.gender,
       age: pet.age,
-      weight: Number(pet.weight),
-      owner: `${owner.name} ${owner.lastName}`,
-      createdAt: pet.createdAt
-    });
+      weight: pet.weight,
+      ownerName: owner.name,
+      ownerLastName: owner.last_name,
+      createdAt: pet.created_at
+    };
+
+    return res.status(200).json({ pet: petRes });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Something went wrong.' });
+    return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};
+
+export const getPets = async (req, res) => {
+  const { id: vetId } = req.user;
+
+  try {
+    const [vet] = await db.query('SELECT * FROM vets WHERE id = $id', {
+      bind: { id: vetId },
+      type: QueryTypes.SELECT
+    });
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para ver las mascotas' });
+    }
+
+    const query = `SELECT pets.id, pets.name, pets.species, pets.gender, pets.age, pets.weight, pets.created_at AS "createdAt", owners.name AS "ownerName", owners.last_name AS "ownerLastName"
+      FROM pets
+      INNER JOIN vets ON vets.id = pets.vet_id
+      INNER JOIN owners ON owners.id = pets.owner_id
+      WHERE vets.id = $vetId
+      ORDER BY pets.id;`;
+
+    const pets = await db.query(query, {
+      bind: { vetId },
+      type: QueryTypes.SELECT
+    });
+
+    res.status(200).json({ pets });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
