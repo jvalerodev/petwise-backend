@@ -1,13 +1,13 @@
 import { check } from 'express-validator';
 
 export const registerValidator = [
-  check('name', 'Name is required.').trim().notEmpty(),
-  check('lastName', 'Last name is required.').trim().notEmpty(),
-  check('email', 'Email is required.').trim().notEmpty(),
-  check('email', 'Invalid email address.').trim().isEmail(),
-  check('password', 'Password is required.').notEmpty(),
-  check('password', 'The password must be at least 6 characters.').isLength({
-    min: 6
-  }),
-  check('role', 'Role is required.').trim().notEmpty()
+  check('name', 'Ingresa tu nombre').trim().notEmpty(),
+  check('lastName', 'Ingresa tu apellido').trim().notEmpty(),
+  check('email', 'Ingresa correo electrónico').trim().notEmpty(),
+  check('email', 'Correo electrónico inváildo').trim().isEmail(),
+  check('password', 'Ingresa contraseña').notEmpty(),
+  check('password', 'La contraseña debe poseer al menos 6 caracteres').isLength(
+    { min: 6 }
+  ),
+  check('role', 'Selecciona el rol').trim().notEmpty()
 ];
