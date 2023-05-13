@@ -1,14 +1,12 @@
 import { QueryTypes } from 'sequelize';
 import db from '../config/database.js';
+import { getVet } from '../utils/functions.js';
 
 export const getOwners = async (req, res) => {
   const { id: vetId } = req.user;
 
   try {
-    const [vet] = await db.query('SELECT * FROM vets WHERE id = $id', {
-      bind: { id: vetId },
-      type: QueryTypes.SELECT
-    });
+    const vet = await getVet(vetId);
 
     if (!vet) {
       return res

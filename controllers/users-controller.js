@@ -26,9 +26,9 @@ export const register = async (req, res) => {
     const hashedPassword = await hashPassword(password);
 
     await db.query(
-      'INSERT INTO users (email, password, role, created_at) VALUES ($email, $password, $role, CURRENT_TIMESTAMP)',
+      'INSERT INTO users (email, password, role, created_at) VALUES ($email, $password, $role, $createdAt)',
       {
-        bind: { email, password: hashedPassword, role },
+        bind: { email, password: hashedPassword, role, createdAt: new Date() },
         type: QueryTypes.INSERT
       }
     );
@@ -39,9 +39,9 @@ export const register = async (req, res) => {
     });
 
     await db.query(
-      'INSERT INTO vets (user_id, name, last_name, email, created_at) VALUES ($userId, $name, $lastName, $email, CURRENT_TIMESTAMP)',
+      'INSERT INTO vets (user_id, name, last_name, email, created_at) VALUES ($userId, $name, $lastName, $email, $createdAt)',
       {
-        bind: { userId: user.id, name, lastName, email },
+        bind: { userId: user.id, name, lastName, email, createdAt: new Date() },
         type: QueryTypes.INSERT
       }
     );

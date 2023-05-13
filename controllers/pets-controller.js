@@ -1,6 +1,7 @@
 import { validationResult } from 'express-validator';
 import { QueryTypes } from 'sequelize';
 import db from '../config/database.js';
+import { getVet } from '../utils/functions.js';
 
 export const createPet = async (req, res) => {
   const errors = validationResult(req);
@@ -26,10 +27,7 @@ export const createPet = async (req, res) => {
 
   try {
     // Get the vet
-    const [vet] = await db.query('SELECT * FROM vets WHERE id = $id', {
-      bind: { id: vetId },
-      type: QueryTypes.SELECT
-    });
+    const vet = await getVet(vetId);
 
     if (!vet) {
       return res
@@ -49,9 +47,15 @@ export const createPet = async (req, res) => {
     // Create owner if does not exists
     if (!owner) {
       [[owner]] = await db.query(
-        'INSERT INTO owners (name, last_name, dni, email, created_at) VALUES ($ownerName, $ownerLastName, $ownerDni, $ownerEmail, CURRENT_TIMESTAMP) RETURNING *;',
+        'INSERT INTO owners (name, last_name, dni, email, created_at) VALUES ($ownerName, $ownerLastName, $ownerDni, $ownerEmail, $createdAt) RETURNING *;',
         {
-          bind: { ownerName, ownerLastName, ownerDni, ownerEmail },
+          bind: {
+            ownerName,
+            ownerLastName,
+            ownerDni,
+            ownerEmail,
+            createdAt: new Date()
+          },
           type: QueryTypes.INSERT
         }
       );
@@ -59,7 +63,7 @@ export const createPet = async (req, res) => {
 
     // Create pet
     const [[pet]] = await db.query(
-      'INSERT INTO pets (name, species, gender, age, weight, owner_id, vet_id, created_at) VALUES ($name, $species, $gender, $age, $weight, $ownerId, $vetId, CURRENT_TIMESTAMP) RETURNING *;',
+      'INSERT INTO pets (name, species, gender, age, weight, owner_id, vet_id, created_at) VALUES ($name, $species, $gender, $age, $weight, $ownerId, $vetId, $createdAt) RETURNING *;',
       {
         bind: {
           name,
@@ -68,7 +72,8 @@ export const createPet = async (req, res) => {
           age,
           weight,
           ownerId: owner.id,
-          vetId: vet.id
+          vetId: vet.id,
+          createdAt: new Date()
         }
       }
     );
@@ -96,10 +101,7 @@ export const getPets = async (req, res) => {
   const { id: vetId } = req.user;
 
   try {
-    const [vet] = await db.query('SELECT * FROM vets WHERE id = $id', {
-      bind: { id: vetId },
-      type: QueryTypes.SELECT
-    });
+    const vet = await getVet(vetId);
 
     if (!vet) {
       return res
@@ -123,5 +125,62 @@ export const getPets = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};
+
+export const updatePet = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const error = errors.array()[0].msg;
+    return res.status(400).json({ error });
+  }
+
+  const { id: vetId } = req.user;
+
+  const { name, species, gender, age, weight } = req.body;
+  const { petId } = req.params;
+
+  try {
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para editar mascotas' });
+    }
+
+    const query = `UPDATE pets SET name = $name, species = $species, gender = $gender, age = $age, weight = $weight, updated_at = $updatedAt
+    WHERE id = $petId RETURNING id, name, species, gender, age, weight, created_at AS "createdAt", owner_id AS "ownerId";`;
+
+    const [[pet]] = await db.query(query, {
+      bind: {
+        name,
+        species,
+        gender,
+        age,
+        weight,
+        petId,
+        updatedAt: new Date()
+      },
+      type: QueryTypes.UPDATE
+    });
+
+    const [owner] = await db.query(
+      'SELECT name, last_name AS "lastName" FROM owners WHERE id = $ownerId',
+      {
+        bind: { ownerId: pet.ownerId },
+        type: QueryTypes.SELECT
+      }
+    );
+
+    const { ownerId, ...petRes } = pet;
+    petRes.ownerName = owner.name;
+    petRes.ownerLastName = owner.lastName;
+
+    return res.status(200).json({ pet: petRes });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Something went wrong.' });
   }
 };
