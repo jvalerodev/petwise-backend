@@ -4,7 +4,12 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import db from './config/database.js';
-import { authRoutes, userRoutes, petRoutes } from './routes/index.js';
+import {
+  authRoutes,
+  userRoutes,
+  petRoutes,
+  ownerRoutes
+} from './routes/index.js';
 
 dotenv.config();
 
@@ -28,6 +33,7 @@ console.log('Connection has been established successfully.');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pets', petRoutes);
+app.use('/api/owners', ownerRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port: ${PORT}.`);

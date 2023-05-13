@@ -24,10 +24,9 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await hashPassword(password);
-    const currentDate = new Date().toLocaleString();
 
     await db.query(
-      `INSERT INTO users (email, password, role, created_at) VALUES ($email, $password, $role, '${currentDate}')`,
+      'INSERT INTO users (email, password, role, created_at) VALUES ($email, $password, $role, CURRENT_TIMESTAMP)',
       {
         bind: { email, password: hashedPassword, role },
         type: QueryTypes.INSERT
@@ -40,7 +39,7 @@ export const register = async (req, res) => {
     });
 
     await db.query(
-      `INSERT INTO vets (user_id, name, last_name, email, created_at) VALUES ($userId, $name, $lastName, $email, '${currentDate}')`,
+      'INSERT INTO vets (user_id, name, last_name, email, created_at) VALUES ($userId, $name, $lastName, $email, CURRENT_TIMESTAMP)',
       {
         bind: { userId: user.id, name, lastName, email },
         type: QueryTypes.INSERT

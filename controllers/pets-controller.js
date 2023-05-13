@@ -22,8 +22,6 @@ export const createPet = async (req, res) => {
     ownerEmail
   } = req.body;
 
-  const currentDate = new Date().toLocaleString();
-
   const { id: vetId } = req.user;
 
   try {
@@ -51,7 +49,7 @@ export const createPet = async (req, res) => {
     // Create owner if does not exists
     if (!owner) {
       [[owner]] = await db.query(
-        `INSERT INTO owners (name, last_name, dni, email, created_at) VALUES ($ownerName, $ownerLastName, $ownerDni, $ownerEmail, '${currentDate}') RETURNING *;`,
+        'INSERT INTO owners (name, last_name, dni, email, created_at) VALUES ($ownerName, $ownerLastName, $ownerDni, $ownerEmail, CURRENT_TIMESTAMP) RETURNING *;',
         {
           bind: { ownerName, ownerLastName, ownerDni, ownerEmail },
           type: QueryTypes.INSERT
@@ -61,7 +59,7 @@ export const createPet = async (req, res) => {
 
     // Create pet
     const [[pet]] = await db.query(
-      `INSERT INTO pets (name, species, gender, age, weight, owner_id, vet_id, created_at) VALUES ($name, $species, $gender, $age, $weight, $ownerId, $vetId, '${currentDate}') RETURNING *;`,
+      'INSERT INTO pets (name, species, gender, age, weight, owner_id, vet_id, created_at) VALUES ($name, $species, $gender, $age, $weight, $ownerId, $vetId, CURRENT_TIMESTAMP) RETURNING *;',
       {
         bind: {
           name,
