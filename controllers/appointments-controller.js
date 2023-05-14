@@ -52,8 +52,29 @@ export const createAppointment = async (req, res) => {
       }
     );
 
-    const { today, future } = await getAppointmentsByDateRange(vet.id);
-    return res.status(201).json({ appointments: { today, future } });
+    const appointments = await getAppointmentsByDateRange(vet.id);
+    return res.status(201).json({ appointments });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};
+
+export const getAppointments = async (req, res) => {
+  const { id: vetId } = req.user;
+
+  try {
+    // Get the vet
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para ver las citas' });
+    }
+
+    const appointments = await getAppointmentsByDateRange(vet.id);
+    return res.status(200).json({ appointments });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: 'Something went wrong.' });

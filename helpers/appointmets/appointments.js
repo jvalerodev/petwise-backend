@@ -10,13 +10,18 @@ export const getAppointmentsByDateRange = async (vetId) => {
     INNER JOIN owners ON owners.id = pets.owner_id
     WHERE appoint.vet_id = $vetId`;
 
-  const todayQuery = 'AND appoint.date = $today;';
-  const futureQuery = 'AND appoint.date > $today;';
+  const orderBy = 'ORDER BY appoint.date;';
 
-  const todayAppointments = await db.query(`${query} ${todayQuery}`, {
-    bind: { vetId, today },
-    type: QueryTypes.SELECT
-  });
+  const todayQuery = 'AND appoint.date = $today';
+  const futureQuery = 'AND appoint.date > $today';
+
+  const todayAppointments = await db.query(
+    `${query} ${todayQuery} ${orderBy}`,
+    {
+      bind: { vetId, today },
+      type: QueryTypes.SELECT
+    }
+  );
 
   const futureAppointments = await db.query(`${query} ${futureQuery}`, {
     bind: { vetId, today },
