@@ -151,15 +151,16 @@ export const updatePet = async (req, res) => {
     }
 
     const query = `UPDATE pets SET name = $name, species = $species, gender = $gender, age = $age, weight = $weight, updated_at = $updatedAt
-    WHERE id = $petId RETURNING id, name, species, gender, age, weight, created_at AS "createdAt", owner_id AS "ownerId";`;
+      WHERE id = $petId
+      RETURNING id, name, species, gender, age, weight, created_at AS "createdAt", owner_id AS "ownerId";`;
 
     const [[pet]] = await db.query(query, {
       bind: {
         name,
         species,
         gender,
-        age,
-        weight,
+        age: age || null,
+        weight: weight || null,
         petId,
         updatedAt: new Date()
       },

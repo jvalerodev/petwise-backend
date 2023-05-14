@@ -1,3 +1,4 @@
+import { validationResult } from 'express-validator';
 import { QueryTypes } from 'sequelize';
 import db from '../config/database.js';
 import { getVet } from '../utils/functions.js';
@@ -30,5 +31,50 @@ export const getOwners = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Something went wrong.' });
+  }
+};
+
+export const updateOwner = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const error = errors.array()[0].msg;
+    return res.status(400).json({ error });
+  }
+
+  const { id: vetId } = req.user;
+  const { name, lastName, dni, email, phone } = req.body;
+  const { ownerId } = req.params;
+
+  try {
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para editar mascotas' });
+    }
+
+    const query = `UPDATE owners SET name = $name, last_name = $lastName, dni = $dni, email = $email, phone = $phone, updated_at = $updatedAt
+      WHERE id = $ownerId
+      RETURNING id, name, last_name AS "lastName", dni, email, phone, created_at AS "createdAt";`;
+
+    const [[owner]] = await db.query(query, {
+      bind: {
+        name,
+        lastName,
+        dni,
+        email,
+        phone: phone || null,
+        updatedAt: new Date(),
+        ownerId
+      },
+      type: QueryTypes.UPDATE
+    });
+
+    return res.status(200).json({ owner });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
