@@ -5,3 +5,8 @@ export const createAppointmentValidator = [
   check('reason', 'Ingresa el motivo de la cita').trim().notEmpty(),
   check('date', 'Ingresa la fecha de la cita').trim().notEmpty()
 ];
+
+export const updateAppointmentValidator = [
+  check('reason', 'Ingresa el motivo de la cita').trim().notEmpty(),
+  check('date', 'Ingresa la fecha de la cita').trim().notEmpty()
+];

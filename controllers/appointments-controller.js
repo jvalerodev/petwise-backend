@@ -80,3 +80,39 @@ export const getAppointments = async (req, res) => {
     return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
+
+export const updateAppointment = async (req, res) => {
+  const { id: vetId } = req.user;
+  const { appointmentId } = req.params;
+  const { reason, date } = req.body;
+
+  try {
+    // Get the vet
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para editar citas' });
+    }
+
+    await db.query(
+      'UPDATE appointments SET reason = $reason, date = $date, updated_at = $updatedAt WHERE id = $appointmentId AND vet_id = $vetId',
+      {
+        bind: {
+          reason,
+          date,
+          updatedAt: new Date(),
+          appointmentId,
+          vetId: vet.id
+        },
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    return res.status(204).json({});
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};

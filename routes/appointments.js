@@ -1,9 +1,13 @@
 import express from 'express';
-import { createAppointmentValidator } from '../helpers/validators/appointments.js';
+import {
+  createAppointmentValidator,
+  updateAppointmentValidator
+} from '../helpers/validators/appointments.js';
 import authMiddleware from '../middlewares/auth-middleware.js';
 import {
   createAppointment,
-  getAppointments
+  getAppointments,
+  updateAppointment
 } from '../controllers/appointments-controller.js';
 
 const router = express.Router();
@@ -16,5 +20,12 @@ router.post(
 );
 
 router.get('/', authMiddleware, getAppointments);
+
+router.put(
+  '/update/:appointmentId',
+  authMiddleware,
+  updateAppointmentValidator,
+  updateAppointment
+);
 
 export default router;
