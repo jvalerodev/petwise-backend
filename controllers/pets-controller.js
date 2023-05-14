@@ -185,3 +185,50 @@ export const updatePet = async (req, res) => {
     res.status(500).json({ error: 'Something went wrong.' });
   }
 };
+
+export const deletePet = async (req, res) => {
+  const { id: vetId } = req.user;
+  const { petId } = req.params;
+
+  try {
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para eliminar mascotas' });
+    }
+
+    const [{ ownerId }] = await db.query(
+      'SELECT owner_id AS "ownerId" FROM pets WHERE id = $petId',
+      { bind: { petId }, type: QueryTypes.SELECT }
+    );
+
+    const [{ totalPets }] = await db.query(
+      'SELECT CAST(COUNT(pets.id) AS INT) AS "totalPets" FROM pets INNER JOIN owners ON owners.id = pets.owner_id WHERE owners.id = $ownerId;',
+      {
+        bind: { ownerId },
+        type: QueryTypes.SELECT
+      }
+    );
+
+    // Delete pet
+    await db.query('DELETE FROM pets WHERE id = $petId;', {
+      bind: { petId },
+      type: QueryTypes.DELETE
+    });
+
+    // The owner only has one pet
+    if (totalPets === 1) {
+      await db.query('DELETE FROM owners WHERE id = $ownerId', {
+        bind: { ownerId },
+        type: QueryTypes.DELETE
+      });
+    }
+
+    return res.status(204).json({});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+};

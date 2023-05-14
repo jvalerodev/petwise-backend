@@ -20,7 +20,8 @@ export const getOwners = async (req, res) => {
       INNER JOIN pets ON pets.owner_id = owners.id
       INNER JOIN vets ON vets.id = pets.vet_id
       WHERE vets.id = $vetId
-      GROUP BY owners.id;`;
+      GROUP BY owners.id
+      ORDER BY owners.created_at;`;
 
     const owners = await db.query(query, {
       bind: { vetId },
@@ -52,7 +53,7 @@ export const updateOwner = async (req, res) => {
     if (!vet) {
       return res
         .status(403)
-        .json({ error: 'No tienes los permisos para editar mascotas' });
+        .json({ error: 'No tienes los permisos para editar propietarios' });
     }
 
     const query = `UPDATE owners SET name = $name, last_name = $lastName, dni = $dni, email = $email, phone = $phone, updated_at = $updatedAt
