@@ -7,7 +7,8 @@ import authMiddleware from '../middlewares/auth-middleware.js';
 import {
   createAppointment,
   getAppointments,
-  updateAppointment
+  updateAppointment,
+  deleteAppointment
 } from '../controllers/appointments-controller.js';
 
 const router = express.Router();
@@ -27,5 +28,7 @@ router.put(
   updateAppointmentValidator,
   updateAppointment
 );
+
+router.delete('/delete/:appointmentId', authMiddleware, deleteAppointment);
 
 export default router;

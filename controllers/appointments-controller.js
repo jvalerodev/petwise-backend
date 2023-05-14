@@ -116,3 +116,35 @@ export const updateAppointment = async (req, res) => {
     return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
+
+export const deleteAppointment = async (req, res) => {
+  const { id: vetId } = req.user;
+  const { appointmentId } = req.params;
+
+  try {
+    // Get the vet
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para eliminar citas' });
+    }
+
+    await db.query(
+      'DELETE FROM appointments WHERE id = $appointmentId AND vet_id = $vetId;',
+      {
+        bind: {
+          appointmentId,
+          vetId: vet.id
+        },
+        type: QueryTypes.DELETE
+      }
+    );
+
+    return res.status(204).json({});
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};
