@@ -61,3 +61,34 @@ export const createReport = async (req, res) => {
     return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
+
+export const getReports = async (req, res) => {
+  const { id: vetId } = req.user;
+  const { petId } = req.params;
+
+  try {
+    // Get the vet
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para ver los informes' });
+    }
+
+    const query = `SELECT reports.id, reports.date, reports.diagnosis, reports.treatment, reports.indications, pets.name AS "petName", owners.name AS "ownerName", owners.last_name AS "ownerLastName"
+      FROM reports
+      INNER JOIN pets ON pets.id = reports.pet_id
+      INNER JOIN owners ON owners.id = pets.owner_id
+      WHERE reports.pet_id = $petId AND reports.vet_id = $vetId;`;
+
+    const reports = await db.query(query, {
+      bind: { petId, vetId: vet.id },
+      type: QueryTypes.SELECT
+    });
+
+    return res.status(200).json({ reports });
+  } catch (error) {
+    return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};
