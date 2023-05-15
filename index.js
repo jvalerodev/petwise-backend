@@ -9,7 +9,8 @@ import {
   userRoutes,
   petRoutes,
   ownerRoutes,
-  appointmentRoutes
+  appointmentRoutes,
+  reportRoutes
 } from './routes/index.js';
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/pets', petRoutes);
 app.use('/api/owners', ownerRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port: ${PORT}.`);
