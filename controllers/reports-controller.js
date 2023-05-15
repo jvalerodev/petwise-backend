@@ -92,3 +92,58 @@ export const getReports = async (req, res) => {
     return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
+
+export const updateReport = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const error = errors.array()[0].msg;
+    return res.status(400).json({ error });
+  }
+
+  const { id: vetId } = req.user;
+  const { reportId } = req.params;
+  const { diagnosis, treatment, indications } = req.body;
+
+  try {
+    // Get the vet
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para editar citas' });
+    }
+
+    await db.query(
+      'UPDATE reports SET diagnosis = $diagnosis, treatment = $treatment, indications = $indications, updated_at = $updatedAt WHERE id = $reportId AND vet_id = $vetId',
+      {
+        bind: {
+          diagnosis,
+          treatment,
+          indications,
+          updatedAt: new Date(),
+          reportId,
+          vetId: vet.id
+        },
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    const query = `SELECT reports.id, reports.date, reports.diagnosis, reports.treatment, reports.indications, pets.name AS "petName", owners.name AS "ownerName", owners.last_name AS "ownerLastName"
+      FROM reports
+      INNER JOIN pets ON pets.id = reports.pet_id
+      INNER JOIN owners ON owners.id = pets.owner_id
+      WHERE reports.id = $reportId AND reports.vet_id = $vetId;`;
+
+    const [report] = await db.query(query, {
+      bind: { reportId, vetId: vet.id },
+      type: QueryTypes.SELECT
+    });
+
+    return res.status(200).json({ report });
+  } catch (error) {
+    console.log(error);
+    return res.status(200).json({ error: 'Something went wrong.' });
+  }
+};
