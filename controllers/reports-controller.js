@@ -147,3 +147,35 @@ export const updateReport = async (req, res) => {
     return res.status(200).json({ error: 'Something went wrong.' });
   }
 };
+
+export const deleteReport = async (req, res) => {
+  const { id: vetId } = req.user;
+  const { reportId } = req.params;
+
+  try {
+    // Get the vet
+    const vet = await getVet(vetId);
+
+    if (!vet) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes los permisos para eliminar informes' });
+    }
+
+    await db.query(
+      'DELETE FROM reports WHERE id = $reportId AND vet_id = $vetId;',
+      {
+        bind: {
+          reportId,
+          vetId: vet.id
+        },
+        type: QueryTypes.DELETE
+      }
+    );
+
+    return res.status(204).json({});
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Something went wrong.' });
+  }
+};

@@ -7,7 +7,8 @@ import authMiddleware from '../middlewares/auth-middleware.js';
 import {
   createReport,
   getReports,
-  updateReport
+  updateReport,
+  deleteReport
 } from '../controllers/reports-controller.js';
 
 const router = express.Router();
@@ -22,5 +23,7 @@ router.put(
   updateReportValidator,
   updateReport
 );
+
+router.delete('/delete/:reportId', authMiddleware, deleteReport);
 
 export default router;
